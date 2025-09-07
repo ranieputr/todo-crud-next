@@ -1,113 +1,94 @@
 'use client'
+
 import { useEffect, useState, useCallback } from 'react'
 import styles from './page.module.css'
 
+type Todo = {
+  id: string
+  title: string
+  done: boolean
+}
+
 export default function Home() {
-  const [todos, setTodos] = useState<any[]>([])
-  const [title, setTitle] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api/todos"
+  const [todos, setTodos] = useState<Todo[]>([])
+  const [newTodo, setNewTodo] = useState("")
 
-  const refresh = useCallback(async () => {
-    try {
-      setError(null)
-      const res = await fetch(API_URL)
-      if (!res.ok) throw new Error(`Error ${res.status}`)
-      const data = await res.json()
-      setTodos(data)
-    } catch (err: any) {
-      console.error("Gagal fetch todos:", err)
-      setError("Gagal mengambil data todo")
-    }
-  }, [API_URL])
+  // Ambil data awal
+  useEffect(() => {
+    fetch('/api/todos')
+      .then(res => res.json())
+      .then((data: Todo[]) => setTodos(data))
+      .catch(() => setTodos([]))
+  }, [])
 
-  useEffect(() => { refresh() }, [refresh])
+  // Tambah todo baru
+  const addTodo = useCallback(async () => {
+    if (!newTodo.trim()) return
+    const res = await fetch('/api/todos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: newTodo })
+    })
+    const todo: Todo = await res.json()
+    setTodos((prev) => [...prev, todo])
+    setNewTodo("")
+  }, [newTodo])
 
-  async function addTodo(e: React.FormEvent) {
-    e.preventDefault()
-    if (!title.trim()) return
-    try {
-      await fetch(API_URL, { 
-        method: 'POST',
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title }) 
-      })
-      setTitle('')
-      refresh()
-    } catch (err) {
-      console.error("Gagal tambah todo:", err)
-    }
+  // Toggle selesai/belum
+  const toggleTodo = async (id: string, done: boolean) => {
+    await fetch(`/api/todos?id=${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ done })
+    })
+    setTodos((prev) => prev.map(t => t.id === id ? { ...t, done } : t))
   }
 
-  async function toggle(id: string, done: boolean) {
-    try {
-      await fetch(API_URL, { 
-        method: 'PUT',
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, done: !done }) 
-      })
-      refresh()
-    } catch (err) {
-      console.error("Gagal toggle todo:", err)
-    }
-  }
-
-  async function remove(id: string) {
-    try {
-      await fetch(API_URL, { 
-        method: 'DELETE',
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }) 
-      })
-      refresh()
-    } catch (err) {
-      console.error("Gagal hapus todo:", err)
-    }
+  // Hapus todo
+  const deleteTodo = async (id: string) => {
+    await fetch(`/api/todos?id=${id}`, { method: 'DELETE' })
+    setTodos((prev) => prev.filter(t => t.id !== id))
   }
 
   return (
     <main className={styles.container}>
-      <h1 className={styles.title}>✅ Todo CRUD</h1>
+      <h1 className={styles.title}>Todo CRUD</h1>
 
-      <form onSubmit={addTodo} className={styles.form}>
+      <div className={styles.form}>
         <input
-          value={title}
-          onChange={e=>setTitle(e.target.value)}
-          placeholder="Tambah todo..."
-          required
+          type="text"
+          placeholder="Tambah todo"
+          value={newTodo}
+          onChange={(e) => setNewTodo(e.target.value)}
           className={styles.input}
         />
-        <button type="submit" className={styles.button}>Tambah</button>
-      </form>
+        <button onClick={addTodo} className={styles.button}>
+          Tambah
+        </button>
+      </div>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
-      {todos.length === 0 ? (
-        <p>Belum ada todo. Tambahkan di atas 👆</p>
-      ) : (
-        <ul className={styles.list}>
-          {todos.map((t:any)=> (
-            <li key={t.id} className={styles.item}>
-              <label className={styles.label}>
-                <input
-                  type="checkbox"
-                  checked={t.done}
-                  onChange={()=>toggle(t.id,t.done)}
-                />
-                <span className={t.done ? styles.done : ""}>
-                  {t.title}
-                </span>
-              </label>
-              <button 
-                onClick={()=>remove(t.id)} 
-                className={styles.deleteButton}
-              >
-                Hapus
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+      <ul className={styles.list}>
+        {todos.map((todo) => (
+          <li key={todo.id} className={styles.item}>
+            <label className={styles.label}>
+              <input
+                type="checkbox"
+                checked={todo.done}
+                onChange={(e) => toggleTodo(todo.id, e.target.checked)}
+              />
+              <span className={todo.done ? styles.done : ""}>
+                {todo.title}
+              </span>
+            </label>
+            <button
+              className={styles.deleteButton}
+              onClick={() => deleteTodo(todo.id)}
+            >
+              Hapus
+            </button>
+          </li>
+        ))}
+      </ul>
     </main>
   )
 }

@@ -1,6 +1,3 @@
-/* Hapus semua selector global (contoh: h1, ul, li) */
-/* Semua harus lewat class */
-
 .container {
   max-width: 720px;
   margin: 24px auto;
@@ -15,6 +12,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  color: #111827;
 }
 
 .form {
@@ -28,6 +26,13 @@
   padding: 8px 12px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
+  outline: none;
+  transition: border 0.2s, box-shadow 0.2s;
+}
+
+.input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
 }
 
 .button {
@@ -37,11 +42,15 @@
   border-radius: 6px;
   padding: 8px 16px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, transform 0.1s;
 }
 
 .button:hover {
   background: #1d4ed8;
+}
+
+.button:active {
+  transform: scale(0.97);
 }
 
 .list {
@@ -58,6 +67,12 @@
   padding: 8px 12px;
   border-radius: 6px;
   margin-bottom: 8px;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.item:hover {
+  background: #f3f4f6;
 }
 
 .label {
@@ -79,9 +94,13 @@
   border-radius: 6px;
   padding: 4px 12px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, transform 0.1s;
 }
 
 .deleteButton:hover {
   background: #dc2626;
+}
+
+.deleteButton:active {
+  transform: scale(0.95);
 }

@@ -6,24 +6,45 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "start:prod": "next start -p 3001",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate deploy",
+    "prisma:dev": "prisma migrate dev --name init"
   },
   "dependencies": {
-    "next": "15.4.7",
+    "@prisma/client": "^5.22.0",
+    "next": "^14.2.5",
     "pg": "^8.16.3",
-    "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/pg": "^8.15.5",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
     "eslint": "^9",
-    "eslint-config-next": "15.4.7",
-    "tailwindcss": "^4",
+    "eslint-config-next": "14.2.5",
+    "prisma": "^5.22.0",
     "typescript": "^5"
-  }
+  },
+  "description": "This is a Next.js project bootstrapped with create-next-app.",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ranieputr/todo-crud-next.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ranieputr/todo-crud-next/issues"
+  },
+  "homepage": "https://github.com/ranieputr/todo-crud-next#readme"
 }

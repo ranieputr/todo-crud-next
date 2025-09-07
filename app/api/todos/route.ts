@@ -1,92 +1,50 @@
-// app/api/todos/route.ts
-import { NextResponse } from "next/server";
-import { Pool } from "pg";
+import { NextResponse } from 'next/server'
 
-// --- Pool Singleton ---
-declare global {
-  // biar tidak bentrok saat HMR di Next.js
-  var pgPool: Pool | undefined;
+type Todo = {
+  id: string
+  title: string
+  done: boolean
 }
 
-const pool =
-  global.pgPool ||
-  new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }, // Supabase butuh SSL
-  });
+// Simpan sementara di memori server (reset tiap restart)
+let todos: Todo[] = []
 
-if (process.env.NODE_ENV !== "production") {
-  global.pgPool = pool;
-}
-
-// --- Helper untuk response error ---
-function handleError(label: string, err: any) {
-  console.error(`${label} ERROR:`, err);
-  return NextResponse.json(
-    { error: err?.message || "Internal server error" },
-    { status: 500, headers: { "Content-Type": "application/json" } }
-  );
-}
-
-// --- GET todos ---
+// GET → ambil semua todos
 export async function GET() {
-  try {
-    const result = await pool.query(
-      "SELECT * FROM todos ORDER BY id DESC"
-    );
-    return NextResponse.json(result.rows, {
-      headers: { "Content-Type": "application/json" },
-    });
-  } catch (err: any) {
-    return handleError("GET /api/todos", err);
-  }
+  return NextResponse.json(todos)
 }
 
-// --- POST todo ---
+// POST → tambah todo
 export async function POST(req: Request) {
-  try {
-    const { title } = await req.json();
-
-    if (!title || typeof title !== "string" || title.trim() === "") {
-      return NextResponse.json(
-        { error: "Title is required" },
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    const result = await pool.query(
-      `INSERT INTO todos (title, completed, created_at)
-       VALUES ($1, $2, NOW())
-       RETURNING *`,
-      [title.trim(), false]
-    );
-
-    return NextResponse.json(result.rows[0], {
-      headers: { "Content-Type": "application/json" },
-    });
-  } catch (err: any) {
-    return handleError("POST /api/todos", err);
+  const body = await req.json()
+  const newTodo: Todo = {
+    id: crypto.randomUUID(),
+    title: body.title || "Untitled",
+    done: body.done ?? false, // default false
   }
+  todos.push(newTodo)
+  return NextResponse.json(newTodo)
 }
 
-// --- DELETE todo ---
+// PUT → update todo
+export async function PUT(req: Request) {
+  const { searchParams } = new URL(req.url)
+  const id = searchParams.get("id")
+  const body = await req.json()
+
+  todos = todos.map((t) =>
+    t.id === id ? { ...t, ...body, done: !!body.done } : t
+  )
+
+  const updated = todos.find((t) => t.id === id)
+  return NextResponse.json(updated)
+}
+
+// DELETE → hapus todo
 export async function DELETE(req: Request) {
-  try {
-    const { id } = await req.json();
+  const { searchParams } = new URL(req.url)
+  const id = searchParams.get("id")
 
-    if (!id || isNaN(Number(id))) {
-      return NextResponse.json(
-        { error: "Valid ID is required" },
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    await pool.query("DELETE FROM todos WHERE id = $1", [id]);
-
-    return NextResponse.json({ success: true }, {
-      headers: { "Content-Type": "application/json" },
-    });
-  } catch (err: any) {
-    return handleError("DELETE /api/todos", err);
-  }
+  todos = todos.filter((t) => t.id !== id)
+  return NextResponse.json({ success: true })
 }

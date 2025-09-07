@@ -12,9 +12,19 @@ const compat = new FlatCompat({
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
+<<<<<<< HEAD
     rules: {
       "@typescript-eslint/no-explicit-any": "off", // 🚀 matiin rule any
     },
+=======
+    ignores: [
+      "node_modules/**",
+      ".next/**",
+      "out/**",
+      "build/**",
+      "next-env.d.ts",
+    ],
+>>>>>>> 7807eb1 (Initial commit from Create Next App)
   },
 ];
 
